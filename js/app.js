@@ -1,7 +1,6 @@
 import { saveTransaction } from "./api.js";
 
-const banks = ["ICICI", "IDFC", "Canara"];
-const cards = ["HDFC Card", "Axis Card"];
+let transactions = [];
 
 let currentMode = "";
 let emotional = false;
@@ -9,135 +8,89 @@ let emotional = false;
 init();
 
 function init() {
-    renderQuickModes();
-    renderForm();
+    renderNavigation();
+    showTransactionScreen();
 }
 
-function renderQuickModes() {
-    const container = document.getElementById("quickModes");
-
-    container.innerHTML = `
-        <button class="quick-mode" onclick="setMode('upi')">➕ Quick UPI</button>
-        <button class="quick-mode" onclick="setMode('card')">💳 Quick Card</button>
-        <button class="quick-mode" onclick="setMode('salary')">💼 Salary</button>
-        <button class="quick-mode" onclick="setMode('transfer')">🔁 Transfer</button>
-        <button class="quick-mode" onclick="setMode('card_payment')">🧾 Card Payment</button>
+function renderNavigation() {
+    const nav = document.getElementById("navigation");
+    nav.innerHTML = `
+        <button onclick="showTransactionScreen()">➕ Add</button>
+        <button onclick="showLedgerScreen()">📒 Ledger</button>
     `;
+    window.showTransactionScreen = showTransactionScreen;
+    window.showLedgerScreen = showLedgerScreen;
+}
 
+function showTransactionScreen() {
+    const main = document.getElementById("mainView");
+    main.innerHTML = `
+        <h3>Quick Modes</h3>
+        <button onclick="setMode('upi')">➕ Quick UPI</button>
+        <button onclick="setMode('card')">💳 Quick Card</button>
+        <button onclick="setMode('salary')">💼 Salary</button>
+        <button onclick="setMode('transfer')">🔁 Transfer</button>
+        <button onclick="setMode('card_payment')">🧾 Card Payment</button>
+
+        <div id="transactionForm"></div>
+    `;
     window.setMode = setMode;
 }
 
-function renderForm() {
-    const container = document.getElementById("transactionForm");
+function showLedgerScreen() {
+    const main = document.getElementById("mainView");
 
-    container.innerHTML = `
-        <input type="date" id="date">
-        <input type="number" id="amount" placeholder="Amount">
-        <div id="dynamicFields"></div>
-        <button class="save-btn" onclick="handleSave()">Save Transaction</button>
-    `;
+    if (transactions.length === 0) {
+        main.innerHTML = "<p>No transactions yet.</p>";
+        return;
+    }
 
-    document.getElementById("date").valueAsDate = new Date();
+    let html = "<h3>Ledger</h3>";
 
-    window.handleSave = handleSave;
+    transactions.slice().reverse().forEach((t, index) => {
+        html += `
+            <div style="background:#222;padding:10px;margin-top:10px;border-radius:8px;">
+                <strong>₹${t.amount}</strong> - ${t.mode.toUpperCase()}<br>
+                ${t.date}<br>
+                ${t.category || ""}<br>
+                ${t.emotional ? "🔴 Emotional<br>" : ""}
+                ${t.reimbursement ? "🟡 Reimbursement<br>" : ""}
+                <button onclick="deleteTransaction(${transactions.length - 1 - index})">Delete</button>
+            </div>
+        `;
+    });
+
+    main.innerHTML = html;
+
+    window.deleteTransaction = deleteTransaction;
 }
 
 function setMode(mode) {
     currentMode = mode;
     emotional = false;
 
-    const dynamic = document.getElementById("dynamicFields");
-    dynamic.innerHTML = "";
+    const form = document.getElementById("transactionForm");
 
-    if (mode === "upi") {
-        dynamic.innerHTML = `
-            ${renderSelect("source", banks)}
-            ${renderUPIApp()}
-            ${renderCategory()}
-            ${renderEmotional()}
-            ${renderReimbursement()}
-            ${renderNotes()}
-        `;
-    }
-
-    if (mode === "card") {
-        dynamic.innerHTML = `
-            ${renderSelect("source", cards)}
-            ${renderCategory()}
-            ${renderEmotional()}
-            ${renderNotes()}
-        `;
-    }
-
-    if (mode === "salary") {
-        dynamic.innerHTML = `
-            ${renderSelect("destination", banks)}
-            ${renderCategory("Salary")}
-            ${renderNotes()}
-        `;
-    }
-
-    if (mode === "transfer") {
-        dynamic.innerHTML = `
-            ${renderSelect("source", banks)}
-            ${renderSelect("destination", banks)}
-        `;
-    }
-
-    if (mode === "card_payment") {
-        dynamic.innerHTML = `
-            ${renderSelect("source", banks)}
-            ${renderSelect("destination", cards)}
-        `;
-    }
-}
-
-function renderSelect(id, options) {
-    let html = `<select id="${id}"><option value="">Select ${id}</option>`;
-    options.forEach(o => html += `<option>${o}</option>`);
-    html += "</select>";
-    return html;
-}
-
-function renderCategory(defaultValue = "") {
-    return `
-        <input type="text" id="category" placeholder="Category" value="${defaultValue}">
-    `;
-}
-
-function renderUPIApp() {
-    return `
-        <select id="upi_app">
-            <option value="">Select UPI App</option>
-            <option>GPay</option>
-            <option>PhonePe</option>
-            <option>Paytm</option>
-        </select>
-    `;
-}
-
-function renderEmotional() {
-    return `
-        <button type="button" class="emotional-btn" onclick="toggleEmotional()">🔴 Emotional Spend</button>
-    `;
-}
-
-function renderReimbursement() {
-    return `
+    form.innerHTML = `
+        <input type="date" id="date">
+        <input type="number" id="amount" placeholder="Amount">
+        <input type="text" id="category" placeholder="Category">
         <label>
             <input type="checkbox" id="reimbursement"> Reimbursement
         </label>
+        <button onclick="toggleEmotional()">🔴 Emotional</button>
+        <button onclick="handleSave()">Save</button>
     `;
+
+    document.getElementById("date").valueAsDate = new Date();
+
+    window.toggleEmotional = toggleEmotional;
+    window.handleSave = handleSave;
 }
 
-function renderNotes() {
-    return `<textarea id="notes" placeholder="Notes"></textarea>`;
-}
-
-window.toggleEmotional = function () {
+function toggleEmotional() {
     emotional = !emotional;
-    event.target.classList.toggle("emotional-active");
-};
+}
 
 async function handleSave() {
 
@@ -146,14 +99,16 @@ async function handleSave() {
         amount: document.getElementById("amount").value,
         mode: currentMode,
         emotional,
-        category: document.getElementById("category")?.value || "",
-        upi_app: document.getElementById("upi_app")?.value || "",
-        notes: document.getElementById("notes")?.value || ""
+        category: document.getElementById("category").value,
+        reimbursement: document.getElementById("reimbursement").checked
     };
 
-    const response = await saveTransaction(data);
+    transactions.push(data);
 
-    if (response.success) {
-        document.getElementById("status").innerHTML = "✅ Saved (Mock)";
-    }
+    document.getElementById("status").innerHTML = "✅ Transaction Saved (Local)";
+}
+
+function deleteTransaction(index) {
+    transactions.splice(index, 1);
+    showLedgerScreen();
 }
