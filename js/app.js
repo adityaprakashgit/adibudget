@@ -4,6 +4,8 @@ let transactions = [];
 
 let currentMode = "";
 let emotional = false;
+let banks = [];
+let creditCards = [];
 
 init();
 
@@ -17,9 +19,11 @@ function renderNavigation() {
     nav.innerHTML = `
         <button onclick="showTransactionScreen()">➕ Add</button>
         <button onclick="showLedgerScreen()">📒 Ledger</button>
+        <button onclick="showAccountsScreen()">⚙ Accounts</button>
     `;
     window.showTransactionScreen = showTransactionScreen;
     window.showLedgerScreen = showLedgerScreen;
+    window.showAccountsScreen = showAccountsScreen;
 }
 
 function showTransactionScreen() {
@@ -111,4 +115,85 @@ async function handleSave() {
 function deleteTransaction(index) {
     transactions.splice(index, 1);
     showLedgerScreen();
+}
+
+function showAccountsScreen() {
+    const main = document.getElementById("mainView");
+
+    let html = `
+        <h3>Banks</h3>
+        <input type="text" id="bankName" placeholder="Bank Name">
+        <input type="number" id="bankOpening" placeholder="Opening Balance">
+        <button onclick="addBank()">Add Bank</button>
+        <div id="bankList"></div>
+
+        <h3 style="margin-top:30px;">Credit Cards</h3>
+        <input type="text" id="cardName" placeholder="Card Name">
+        <input type="number" id="cardLimit" placeholder="Credit Limit">
+        <input type="number" id="cardOpening" placeholder="Opening Outstanding">
+        <button onclick="addCard()">Add Card</button>
+        <div id="cardList"></div>
+    `;
+
+    main.innerHTML = html;
+
+    renderAccounts();
+}
+
+window.addBank = function() {
+    const name = document.getElementById("bankName").value;
+    const opening = parseFloat(document.getElementById("bankOpening").value) || 0;
+
+    if (!name) return alert("Enter bank name.");
+
+    banks.push({ name, opening });
+    renderAccounts();
+};
+
+window.addCard = function() {
+    const name = document.getElementById("cardName").value;
+    const limit = parseFloat(document.getElementById("cardLimit").value) || 0;
+    const opening = parseFloat(document.getElementById("cardOpening").value) || 0;
+
+    if (!name) return alert("Enter card name.");
+
+    creditCards.push({ name, limit, opening });
+    renderAccounts();
+};
+
+function renderAccounts() {
+
+    const bankList = document.getElementById("bankList");
+    bankList.innerHTML = "";
+
+    banks.forEach((b, index) => {
+        bankList.innerHTML += `
+            <div style="background:#222;padding:8px;margin-top:8px;border-radius:6px;">
+                ${b.name} | Opening: ₹${b.opening}
+                <button onclick="deleteBank(${index})">Delete</button>
+            </div>
+        `;
+    });
+
+    const cardList = document.getElementById("cardList");
+    cardList.innerHTML = "";
+
+    creditCards.forEach((c, index) => {
+        cardList.innerHTML += `
+            <div style="background:#222;padding:8px;margin-top:8px;border-radius:6px;">
+                ${c.name} | Limit: ₹${c.limit} | Opening: ₹${c.opening}
+                <button onclick="deleteCard(${index})">Delete</button>
+            </div>
+        `;
+    });
+
+    window.deleteBank = function(index) {
+        banks.splice(index, 1);
+        renderAccounts();
+    };
+
+    window.deleteCard = function(index) {
+        creditCards.splice(index, 1);
+        renderAccounts();
+    };
 }
