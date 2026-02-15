@@ -27,6 +27,16 @@ function renderNavigation() {
 }
 
 function showTransactionScreen() {
+    
+    if (banks.length === 0 && creditCards.length === 0) {
+        document.getElementById("mainView").innerHTML = `
+            <h3>No Accounts Found</h3>
+            <p>Please add at least one Bank or Credit Card first.</p>
+            <button onclick="showAccountsScreen()">Go to Accounts</button>
+        `;
+        return;
+    }
+
     const main = document.getElementById("mainView");
     main.innerHTML = `
         <h3>Quick Modes</h3>
@@ -75,21 +85,89 @@ function setMode(mode) {
 
     const form = document.getElementById("transactionForm");
 
-    form.innerHTML = `
-        <input type="date" id="date">
-        <input type="number" id="amount" placeholder="Amount">
-        <input type="text" id="category" placeholder="Category">
-        <label>
-            <input type="checkbox" id="reimbursement"> Reimbursement
-        </label>
-        <button onclick="toggleEmotional()">🔴 Emotional</button>
-        <button onclick="handleSave()">Save</button>
-    `;
+    if (mode === "upi") {
+        form.innerHTML = `
+            <input type="date" id="date">
+            <input type="number" id="amount" placeholder="Amount">
+
+            ${renderSelect("source", banks.map(b => b.name))}
+
+            <select id="upi_app">
+                <option value="">Select UPI App</option>
+                <option>GPay</option>
+                <option>PhonePe</option>
+                <option>Paytm</option>
+            </select>
+
+            <input type="text" id="category" placeholder="Category">
+
+            <label>
+                <input type="checkbox" id="reimbursement"> Reimbursement
+            </label>
+
+            <button type="button" onclick="toggleEmotional()">🔴 Emotional</button>
+
+            <textarea id="notes" placeholder="Notes"></textarea>
+
+            <button onclick="handleSave()">Save</button>
+        `;
+    }
+
+    if (mode === "card") {
+        form.innerHTML = `
+            <input type="date" id="date">
+            <input type="number" id="amount" placeholder="Amount">
+
+            ${renderSelect("source", creditCards.map(c => c.name))}
+
+            <input type="text" id="category" placeholder="Category">
+
+            <button type="button" onclick="toggleEmotional()">🔴 Emotional</button>
+
+            <textarea id="notes" placeholder="Notes"></textarea>
+
+            <button onclick="handleSave()">Save</button>
+        `;
+    }
+
+    if (mode === "salary") {
+        form.innerHTML = `
+            <input type="date" id="date">
+            <input type="number" id="amount" placeholder="Amount">
+
+            ${renderSelect("destination", banks.map(b => b.name))}
+
+            <textarea id="notes" placeholder="Notes"></textarea>
+
+            <button onclick="handleSave()">Save</button>
+        `;
+    }
+
+    if (mode === "transfer") {
+        form.innerHTML = `
+            <input type="date" id="date">
+            <input type="number" id="amount" placeholder="Amount">
+
+            ${renderSelect("source", banks.map(b => b.name))}
+            ${renderSelect("destination", banks.map(b => b.name))}
+
+            <button onclick="handleSave()">Save</button>
+        `;
+    }
+
+    if (mode === "card_payment") {
+        form.innerHTML = `
+            <input type="date" id="date">
+            <input type="number" id="amount" placeholder="Amount">
+
+            ${renderSelect("source", banks.map(b => b.name))}
+            ${renderSelect("destination", creditCards.map(c => c.name))}
+
+            <button onclick="handleSave()">Save</button>
+        `;
+    }
 
     document.getElementById("date").valueAsDate = new Date();
-
-    window.toggleEmotional = toggleEmotional;
-    window.handleSave = handleSave;
 }
 
 function toggleEmotional() {
