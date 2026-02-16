@@ -1,0 +1,222 @@
+/* ================= BASE ================= */
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  background: #F2F2F7;
+  color: #1C1C1E;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ================= LAYOUT ================= */
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ================= SIDEBAR ================= */
+
+.sidebar {
+  width: 260px;
+  background: #FFFFFF;
+  border-right: 1px solid #E5E5EA;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 12px;
+  color: #8E8E93;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.account-card {
+  background: #F9F9FB;
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.account-name {
+  font-size: 13px;
+  color: #8E8E93;
+}
+
+.account-balance {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.account-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 14px;
+  color: #3A3A3C;
+  cursor: pointer;
+}
+
+.account-item:hover {
+  color: #007AFF;
+}
+
+/* ================= MAIN ================= */
+
+.main {
+  flex: 1;
+  background: #F2F2F7;
+  padding: 40px;
+}
+
+/* ================= TOP BAR ================= */
+
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.tabs {
+  display: flex;
+  gap: 25px;
+}
+
+.tab {
+  font-size: 14px;
+  color: #8E8E93;
+  cursor: pointer;
+  position: relative;
+}
+
+.tab.active {
+  color: #007AFF;
+  font-weight: 500;
+}
+
+.tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #007AFF;
+  border-radius: 2px;
+}
+
+/* ================= KPI SECTION ================= */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px,1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.card {
+  background: white;
+  padding: 22px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.label {
+  font-size: 13px;
+  color: #8E8E93;
+  margin-bottom: 8px;
+}
+
+.value {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.sub {
+  font-size: 13px;
+  margin-top: 6px;
+  color: #8E8E93;
+}
+
+.positive { color: #34C759; }
+.warning { color: #FF9F0A; }
+.negative { color: #FF3B30; }
+
+/* ================= TRANSACTIONS ================= */
+
+.transaction-list {
+  background: white;
+  border-radius: 20px;
+  padding: 20px 30px;
+}
+
+.transaction-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 18px 0;
+  border-bottom: 1px solid #F2F2F7;
+}
+
+.transaction-row:last-child {
+  border-bottom: none;
+}
+
+.transaction-row:hover {
+  background: #F9F9FB;
+  border-radius: 12px;
+  padding-left: 10px;
+}
+
+/* ================= MICRO ANIMATIONS ================= */
+
+.card,
+.account-card,
+.transaction-row {
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+/* ===== Floating Action Button ===== */
+
+.fab {
+  position: fixed;
+  right: 30px;
+  bottom: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: #007AFF;
+  color: white;
+  font-size: 28px;
+  font-weight: 300;
+  box-shadow: 0 10px 25px rgba(0,122,255,0.35);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.fab:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 15px 35px rgba(0,122,255,0.45);
+}
+
+.fab:active {
+  transform: scale(0.92);
+}

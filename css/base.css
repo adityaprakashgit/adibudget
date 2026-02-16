@@ -1,0 +1,73 @@
+/* ===============================
+   DESIGN TOKENS (System Level)
+================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root {
+
+  /* Colors */
+  --bg-main: #f6f7fb;
+  --surface: #ffffff;
+  --surface-soft: #f9fafc;
+
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+
+  --border: rgba(0, 0, 0, 0.06);
+
+  --primary: #2563eb;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+
+  /* Radius */
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 8px;
+
+  /* Shadows */
+  --shadow-soft: 0 8px 25px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 12px 35px rgba(0, 0, 0, 0.08);
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 30px;
+  --space-7: 40px;
+}
+
+/* ===============================
+   GLOBAL RESET
+================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Remove default margins */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}

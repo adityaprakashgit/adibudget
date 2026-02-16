@@ -1,277 +1,114 @@
-import { saveTransaction } from "./api.js";
+// ============================
+// DATA ENGINE
+// ============================
 
-let transactions = [];
+const API_URL = "http://localhost:3000";
 
-let currentMode = "";
-let emotional = false;
-let banks = [];
-let creditCards = [];
-
-init();
-
-function init() {
-    renderNavigation();
-    showTransactionScreen();
-}
-
-function renderNavigation() {
-    const nav = document.getElementById("navigation");
-    nav.innerHTML = `
-        <button onclick="showTransactionScreen()">➕ Add</button>
-        <button onclick="showLedgerScreen()">📒 Ledger</button>
-        <button onclick="showAccountsScreen()">⚙ Accounts</button>
-    `;
-    window.showTransactionScreen = showTransactionScreen;
-    window.showLedgerScreen = showLedgerScreen;
-    window.showAccountsScreen = showAccountsScreen;
-}
-
-function showTransactionScreen() {
-    
-    if (banks.length === 0 && creditCards.length === 0) {
-        document.getElementById("mainView").innerHTML = `
-            <h3>No Accounts Found</h3>
-            <p>Please add at least one Bank or Credit Card first.</p>
-            <button onclick="showAccountsScreen()">Go to Accounts</button>
-        `;
-        return;
-    }
-
-    const main = document.getElementById("mainView");
-    main.innerHTML = `
-        <h3>Quick Modes</h3>
-        <button onclick="setMode('upi')">➕ Quick UPI</button>
-        <button onclick="setMode('card')">💳 Quick Card</button>
-        <button onclick="setMode('salary')">💼 Salary</button>
-        <button onclick="setMode('transfer')">🔁 Transfer</button>
-        <button onclick="setMode('card_payment')">🧾 Card Payment</button>
-
-        <div id="transactionForm"></div>
-    `;
-    window.setMode = setMode;
-}
-
-function showLedgerScreen() {
-    const main = document.getElementById("mainView");
-
-    if (transactions.length === 0) {
-        main.innerHTML = "<p>No transactions yet.</p>";
-        return;
-    }
-
-    let html = "<h3>Ledger</h3>";
-
-    transactions.slice().reverse().forEach((t, index) => {
-        html += `
-            <div style="background:#222;padding:10px;margin-top:10px;border-radius:8px;">
-                <strong>₹${t.amount}</strong> - ${t.mode.toUpperCase()}<br>
-                ${t.date}<br>
-                ${t.category || ""}<br>
-                ${t.emotional ? "🔴 Emotional<br>" : ""}
-                ${t.reimbursement ? "🟡 Reimbursement<br>" : ""}
-                <button onclick="deleteTransaction(${transactions.length - 1 - index})">Delete</button>
-            </div>
-        `;
-    });
-
-    main.innerHTML = html;
-
-    window.deleteTransaction = deleteTransaction;
-}
-
-function setMode(mode) {
-    currentMode = mode;
-    emotional = false;
-
-    const form = document.getElementById("transactionForm");
-
-    if (mode === "upi") {
-        form.innerHTML = `
-            <input type="date" id="date">
-            <input type="number" id="amount" placeholder="Amount">
-
-            ${renderSelect("source", banks.map(b => b.name))}
-
-            <select id="upi_app">
-                <option value="">Select UPI App</option>
-                <option>GPay</option>
-                <option>PhonePe</option>
-                <option>Paytm</option>
-            </select>
-
-            <input type="text" id="category" placeholder="Category">
-
-            <label>
-                <input type="checkbox" id="reimbursement"> Reimbursement
-            </label>
-
-            <button type="button" onclick="toggleEmotional()">🔴 Emotional</button>
-
-            <textarea id="notes" placeholder="Notes"></textarea>
-
-            <button onclick="handleSave()">Save</button>
-        `;
-    }
-
-    if (mode === "card") {
-        form.innerHTML = `
-            <input type="date" id="date">
-            <input type="number" id="amount" placeholder="Amount">
-
-            ${renderSelect("source", creditCards.map(c => c.name))}
-
-            <input type="text" id="category" placeholder="Category">
-
-            <button type="button" onclick="toggleEmotional()">🔴 Emotional</button>
-
-            <textarea id="notes" placeholder="Notes"></textarea>
-
-            <button onclick="handleSave()">Save</button>
-        `;
-    }
-
-    if (mode === "salary") {
-        form.innerHTML = `
-            <input type="date" id="date">
-            <input type="number" id="amount" placeholder="Amount">
-
-            ${renderSelect("destination", banks.map(b => b.name))}
-
-            <textarea id="notes" placeholder="Notes"></textarea>
-
-            <button onclick="handleSave()">Save</button>
-        `;
-    }
-
-    if (mode === "transfer") {
-        form.innerHTML = `
-            <input type="date" id="date">
-            <input type="number" id="amount" placeholder="Amount">
-
-            ${renderSelect("source", banks.map(b => b.name))}
-            ${renderSelect("destination", banks.map(b => b.name))}
-
-            <button onclick="handleSave()">Save</button>
-        `;
-    }
-
-    if (mode === "card_payment") {
-        form.innerHTML = `
-            <input type="date" id="date">
-            <input type="number" id="amount" placeholder="Amount">
-
-            ${renderSelect("source", banks.map(b => b.name))}
-            ${renderSelect("destination", creditCards.map(c => c.name))}
-
-            <button onclick="handleSave()">Save</button>
-        `;
-    }
-
-    document.getElementById("date").valueAsDate = new Date();
-}
-
-function toggleEmotional() {
-    emotional = !emotional;
-}
-
-async function handleSave() {
-
-    const data = {
-        date: document.getElementById("date").value,
-        amount: document.getElementById("amount").value,
-        mode: currentMode,
-        emotional,
-        category: document.getElementById("category").value,
-        reimbursement: document.getElementById("reimbursement").checked
-    };
-
-    transactions.push(data);
-
-    document.getElementById("status").innerHTML = "✅ Transaction Saved (Local)";
-}
-
-function deleteTransaction(index) {
-    transactions.splice(index, 1);
-    showLedgerScreen();
-}
-
-function showAccountsScreen() {
-    const main = document.getElementById("mainView");
-
-    let html = `
-        <h3>Banks</h3>
-        <input type="text" id="bankName" placeholder="Bank Name">
-        <input type="number" id="bankOpening" placeholder="Opening Balance">
-        <button onclick="addBank()">Add Bank</button>
-        <div id="bankList"></div>
-
-        <h3 style="margin-top:30px;">Credit Cards</h3>
-        <input type="text" id="cardName" placeholder="Card Name">
-        <input type="number" id="cardLimit" placeholder="Credit Limit">
-        <input type="number" id="cardOpening" placeholder="Opening Outstanding">
-        <button onclick="addCard()">Add Card</button>
-        <div id="cardList"></div>
-    `;
-
-    main.innerHTML = html;
-
-    renderAccounts();
-}
-
-window.addBank = function() {
-    const name = document.getElementById("bankName").value;
-    const opening = parseFloat(document.getElementById("bankOpening").value) || 0;
-
-    if (!name) return alert("Enter bank name.");
-
-    banks.push({ name, opening });
-    renderAccounts();
+const state = {
+  transactions: []
 };
 
-window.addCard = function() {
-    const name = document.getElementById("cardName").value;
-    const limit = parseFloat(document.getElementById("cardLimit").value) || 0;
-    const opening = parseFloat(document.getElementById("cardOpening").value) || 0;
+async function loadTransactionsFromDB() {
+  const res = await fetch(`${API_URL}/transactions`);
+  const data = await res.json();
 
-    if (!name) return alert("Enter card name.");
+  state.transactions = data.map(tx => ({
+    ...tx,
+    amount: Number(tx.amount),
+    date: new Date(tx.date),
+    type: tx.type.toLowerCase()
+  }));
+}
 
-    creditCards.push({ name, limit, opening });
-    renderAccounts();
-};
+async function addTransaction(type, amount, category) {
 
-function renderAccounts() {
+  await fetch(`${API_URL}/transactions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type,
+      amount,
+      category
+    })
+  });
+}
 
-    const bankList = document.getElementById("bankList");
-    bankList.innerHTML = "";
+async function deleteTransaction(id) {
+  await fetch(`${API_URL}/transactions/${id}`, {
+    method: "DELETE"
+  });
+}
 
-    banks.forEach((b, index) => {
-        bankList.innerHTML += `
-            <div style="background:#222;padding:8px;margin-top:8px;border-radius:6px;">
-                ${b.name} | Opening: ₹${b.opening}
-                <button onclick="deleteBank(${index})">Delete</button>
-            </div>
-        `;
+// ============================
+// DASHBOARD RENDER
+// ============================
+
+function renderDashboardData() {
+
+  const income = state.transactions
+    .filter(tx => tx.type === "income")
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  const expenses = state.transactions
+    .filter(tx => tx.type === "expense")
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  const net = income - expenses;
+
+  const netEl = document.getElementById("netWorth");
+  const burnEl = document.getElementById("burnRatio");
+
+  if (netEl) netEl.innerText = "₹ " + net.toLocaleString();
+
+  if (burnEl) {
+    if (income > 0) {
+      burnEl.innerText =
+        Math.round((expenses / income) * 100) + "%";
+    } else {
+      burnEl.innerText = "0%";
+    }
+  }
+}
+
+// ============================
+// TRANSACTIONS RENDER
+// ============================
+
+function renderTransactionsTable() {
+
+  const tbody = document.querySelector(".table tbody");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  state.transactions.forEach(tx => {
+
+    const tr = document.createElement("tr");
+
+    const isIncome = tx.type === "income";
+
+    tr.innerHTML = `
+      <td>${tx.date.toLocaleDateString()}</td>
+      <td>${tx.type}</td>
+      <td>${tx.category}</td>
+      <td class="${isIncome ? "amount-positive" : "amount-negative"}"
+          style="text-align:right;">
+        ${isIncome ? "+" : "-"} ₹ ${tx.amount}
+      </td>
+      <td>
+        <button class="delete-btn" data-id="${tx.id}">
+          Delete
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  document.querySelectorAll(".delete-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await deleteTransaction(btn.dataset.id);
+      loadPage(window.currentPage);
     });
-
-    const cardList = document.getElementById("cardList");
-    cardList.innerHTML = "";
-
-    creditCards.forEach((c, index) => {
-        cardList.innerHTML += `
-            <div style="background:#222;padding:8px;margin-top:8px;border-radius:6px;">
-                ${c.name} | Limit: ₹${c.limit} | Opening: ₹${c.opening}
-                <button onclick="deleteCard(${index})">Delete</button>
-            </div>
-        `;
-    });
-
-    window.deleteBank = function(index) {
-        banks.splice(index, 1);
-        renderAccounts();
-    };
-
-    window.deleteCard = function(index) {
-        creditCards.splice(index, 1);
-        renderAccounts();
-    };
+  });
 }

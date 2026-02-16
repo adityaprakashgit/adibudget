@@ -1,0 +1,48 @@
+<div class="stack">
+
+  <!-- HEADER -->
+  <div class="card">
+    <div class="grid-2">
+
+      <div>
+        <div class="label">Transactions</div>
+        <div class="value" id="transactionCount">0 Records</div>
+        <div class="sub">Current Month</div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; align-items:center;">
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-open-modal>
+          + Add Transaction
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card">
+
+    <table class="table">
+
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Category</th>
+          <th style="text-align:right;">Amount</th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <!-- IMPORTANT: Leave tbody empty -->
+      <tbody>
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
