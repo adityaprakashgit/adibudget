@@ -1,47 +1,55 @@
-// ============================
-// DATA ENGINE
-// ============================
-
-const API_URL = "http://localhost:3000";
+const API_URL = "";
 
 const state = {
-  transactions: []
+  transactions: [],
+  budgets: []
 };
 
 let accounts = [];
 
-// ============================
-// LOAD TRANSACTIONS
-// ============================
+async function requestJSON(path, options = {}) {
+  const response = await fetch(`${API_URL}${path}`, options);
+  const contentType = response.headers.get("content-type") || "";
+  const hasJsonBody = contentType.includes("application/json");
+  const payload = hasJsonBody ? await response.json() : null;
+
+  if (!response.ok) {
+    throw new Error(
+      payload && payload.error
+        ? payload.error
+        : `Request failed with status ${response.status}`
+    );
+  }
+
+  return payload;
+}
+
+function formatCurrency(amount) {
+  return `₹ ${Number(amount || 0).toLocaleString()}`;
+}
 
 async function loadTransactionsFromDB() {
+  const data = await requestJSON("/transactions");
 
-  const res = await fetch(`${API_URL}/transactions`);
-  const data = await res.json();
-
-  state.transactions = data.map(tx => ({
+  state.transactions = data.map((tx) => ({
     ...tx,
     amount: Number(tx.amount),
     date: new Date(tx.date),
-    type: tx.type.toLowerCase()
+    type: String(tx.type || "").toLowerCase()
   }));
 }
 
-// ============================
-// LOAD ACCOUNTS
-// ============================
-
 async function loadAccounts() {
-
-  const res = await fetch(`${API_URL}/accounts`);
-  accounts = await res.json();
+  accounts = await requestJSON("/accounts");
 
   const select = document.getElementById("accountSelect");
-  if (!select) return;
+  if (!select) {
+    return;
+  }
 
   select.innerHTML = "";
 
-  accounts.forEach(acc => {
+  accounts.forEach((acc) => {
     const option = document.createElement("option");
     option.value = acc.id;
     option.innerText = acc.name;
@@ -49,92 +57,92 @@ async function loadAccounts() {
   });
 }
 
-// ============================
-// ADD TRANSACTION (REAL)
-// ============================
+async function loadBudgets() {
+  state.budgets = await requestJSON("/budgets");
+}
 
 async function addTransaction(type, amount, category, account_id) {
+  const payload = {
+    type,
+    amount: Number(amount),
+    category,
+    account_id
+  };
 
-  amount = Number(amount);
-  if (!amount || !account_id) return;
-
-  await fetch(`${API_URL}/transactions`, {
+  return requestJSON("/transactions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      type,
-      amount,
-      category,
-      account_id
-    })
+    body: JSON.stringify(payload)
   });
 }
 
-// ============================
-// DELETE TRANSACTION
-// ============================
-
 async function deleteTransaction(id) {
-
-  await fetch(`${API_URL}/transactions/${id}`, {
+  return requestJSON(`/transactions/${id}`, {
     method: "DELETE"
   });
 }
 
-// ============================
-// DASHBOARD RENDER
-// ============================
-
 function renderDashboardData() {
-
   const income = state.transactions
-    .filter(tx => tx.type === "income")
+    .filter((tx) => tx.type === "income")
     .reduce((sum, tx) => sum + tx.amount, 0);
-
   const expenses = state.transactions
-    .filter(tx => tx.type === "expense")
+    .filter((tx) => tx.type === "expense")
     .reduce((sum, tx) => sum + tx.amount, 0);
-
-  const net = income - expenses;
+  const net = accounts.reduce((sum, acc) => {
+    const balance = Number(acc.balance || 0);
+    return acc.type === "credit" ? sum - balance : sum + balance;
+  }, 0);
+  const liquidCash = accounts
+    .filter((acc) => acc.type === "bank")
+    .reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
+  const runwayMonths = expenses > 0 ? liquidCash / expenses : 0;
+  const burnRatio = income > 0 ? Math.round((expenses / income) * 100) : 0;
+  const stabilityScore = Math.max(
+    0,
+    Math.min(100, Math.round(100 - burnRatio + Math.min(runwayMonths * 10, 40)))
+  );
 
   const netEl = document.getElementById("netWorth");
+  const liquidCashEl = document.getElementById("liquidCash");
+  const runwayEl = document.getElementById("runway");
   const burnEl = document.getElementById("burnRatio");
+  const stabilityEl = document.getElementById("stabilityScore");
+  const stabilityFillEl = document.getElementById("stabilityFill");
 
-  if (netEl) netEl.innerText = "₹ " + net.toLocaleString();
-
-  if (burnEl) {
-    if (income > 0) {
-      burnEl.innerText =
-        Math.round((expenses / income) * 100) + "%";
-    } else {
-      burnEl.innerText = "0%";
-    }
-  }
+  if (netEl) netEl.innerText = formatCurrency(net);
+  if (liquidCashEl) liquidCashEl.innerText = formatCurrency(liquidCash);
+  if (runwayEl) runwayEl.innerText = expenses > 0 ? runwayMonths.toFixed(1) : "∞";
+  if (burnEl) burnEl.innerText = `${burnRatio}%`;
+  if (stabilityEl) stabilityEl.innerText = `${stabilityScore}%`;
+  if (stabilityFillEl) stabilityFillEl.style.width = `${stabilityScore}%`;
 }
 
-// ============================
-// TRANSACTIONS RENDER
-// ============================
-
 function renderTransactionsTable() {
-
   const tbody = document.querySelector(".table tbody");
-  if (!tbody) return;
+  const countEl = document.getElementById("transactionCount");
+
+  if (!tbody) {
+    return;
+  }
 
   tbody.innerHTML = "";
 
-  state.transactions.forEach(tx => {
+  if (countEl) {
+    countEl.innerText = `${state.transactions.length} Records`;
+  }
 
+  state.transactions.forEach((tx) => {
     const tr = document.createElement("tr");
     const isIncome = tx.type === "income";
 
     tr.innerHTML = `
       <td>${tx.date.toLocaleDateString()}</td>
       <td>${tx.type}</td>
-      <td>${tx.category}</td>
+      <td>${tx.category || "Uncategorized"}</td>
       <td class="${isIncome ? "amount-positive" : "amount-negative"}"
           style="text-align:right;">
-        ${isIncome ? "+" : "-"} ₹ ${tx.amount}
+        ${isIncome ? "+" : "-"} ${formatCurrency(tx.amount)}
       </td>
       <td>
         <button class="delete-btn" data-id="${tx.id}">
@@ -146,49 +154,56 @@ function renderTransactionsTable() {
     tbody.appendChild(tr);
   });
 
-  document.querySelectorAll(".delete-btn").forEach(btn => {
+  document.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
+      try {
+        await deleteTransaction(btn.dataset.id);
+        await loadTransactionsFromDB();
+        await loadAccounts();
 
-      await deleteTransaction(btn.dataset.id);
+        if (window.currentPage === "transactions") {
+          renderTransactionsTable();
+        }
 
-      await loadTransactionsFromDB();
-      await loadAccounts();
+        if (window.currentPage === "accounts") {
+          renderAccountsPage();
+        }
 
-      if (window.currentPage === "transactions") {
-        renderTransactionsTable();
-      }
-
-      if (window.currentPage === "accounts") {
-        renderAccountsPage();
-      }
-
-      if (window.currentPage === "dashboard") {
-        renderDashboardData();
+        if (window.currentPage === "dashboard") {
+          renderDashboardData();
+        }
+      } catch (error) {
+        window.alert(error.message);
       }
     });
   });
 }
 
-// ============================
-// ACCOUNTS RENDER
-// ============================
-
 async function renderAccountsPage() {
-
   await loadAccounts();
 
   const container = document.getElementById("accountsGrid");
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
   container.innerHTML = "";
 
-  accounts.forEach(acc => {
+  if (!accounts.length) {
+    container.innerHTML = `
+      <div class="card">
+        <div class="label">No accounts found</div>
+        <div class="sub">Create asset or liability accounts in Firefly III.</div>
+      </div>
+    `;
+    return;
+  }
 
+  accounts.forEach((acc) => {
     const card = document.createElement("div");
     card.className = "card lift-hover";
 
     if (acc.type === "credit") {
-
       const utilization =
         acc.credit_limit > 0
           ? ((Math.abs(acc.balance) / acc.credit_limit) * 100).toFixed(0)
@@ -197,22 +212,60 @@ async function renderAccountsPage() {
       card.innerHTML = `
         <div class="label">${acc.name}</div>
         <div class="value negative">
-          ₹ ${Math.abs(acc.balance).toLocaleString()}
+          ${formatCurrency(Math.abs(acc.balance))}
         </div>
         <div class="sub">Outstanding</div>
         <div class="sub">${utilization}% utilized</div>
       `;
-
     } else {
-
       card.innerHTML = `
         <div class="label">${acc.name}</div>
         <div class="value">
-          ₹ ${acc.balance.toLocaleString()}
+          ${formatCurrency(acc.balance)}
         </div>
         <div class="sub">Available Balance</div>
       `;
     }
+
+    container.appendChild(card);
+  });
+}
+
+async function renderBudgetsPage() {
+  await loadBudgets();
+
+  const container = document.getElementById("budgetsGrid");
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML = "";
+
+  if (!state.budgets.length) {
+    container.innerHTML = `
+      <div class="card">
+        <div class="label">No budgets found</div>
+        <div class="sub">Create budgets in Firefly III to track them here.</div>
+      </div>
+    `;
+    return;
+  }
+
+  state.budgets.forEach((budget) => {
+    const card = document.createElement("div");
+    card.className = "card lift-hover";
+    const remaining =
+      budget.remaining === null || budget.remaining === undefined
+        ? "Not available"
+        : `${budget.currency} ${Number(budget.remaining).toLocaleString()}`;
+    const spent = `${budget.currency} ${Number(budget.spent || 0).toLocaleString()}`;
+
+    card.innerHTML = `
+      <div class="label">${budget.name}</div>
+      <div class="value">${remaining}</div>
+      <div class="sub">Remaining</div>
+      <div class="sub">Spent: ${spent}</div>
+    `;
 
     container.appendChild(card);
   });
