@@ -1,46 +1,26 @@
 <div class="stack">
-
-  <!-- HEADER -->
   <div class="card">
-    <div class="grid-2">
-
+    <div class="section-header">
       <div>
         <div class="label">Transactions</div>
         <div class="value" id="transactionCount">0 Records</div>
-        <div class="sub">Current Month</div>
+        <div class="sub">Create, edit, split, filter, and delete journal entries.</div>
       </div>
 
-      <div style="display:flex; justify-content:flex-end; align-items:center;">
-        <button class="btn btn-primary" data-open-modal>
-          + Add Transaction
+      <div class="toolbar-actions">
+        <button type="button" class="btn btn-secondary" id="clearTransactionFiltersBtn">
+          Clear Filters
         </button>
-
+        <button type="button" class="btn btn-primary" data-open-modal="transaction-create">
+          Add Transaction
+        </button>
       </div>
-
     </div>
+
+    <div id="transactionsFilters" class="filter-grid"></div>
   </div>
 
-  <!-- TABLE -->
   <div class="card">
-
-    <table class="table">
-
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Type</th>
-          <th>Category</th>
-          <th style="text-align:right;">Amount</th>
-          <th></th>
-        </tr>
-      </thead>
-
-      <!-- IMPORTANT: Leave tbody empty -->
-      <tbody>
-      </tbody>
-
-    </table>
-
+    <div id="transactionsTable"></div>
   </div>
-
 </div>

@@ -74,8 +74,41 @@
   gap: var(--space-5);
 }
 
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-5);
+}
+
 .stack {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    width: 100%;
+    padding: var(--space-5);
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .topbar {
+    height: auto;
+    padding: var(--space-4);
+    gap: var(--space-4);
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .page-container {
+    padding: var(--space-4);
+  }
 }

@@ -1,0 +1,28 @@
+<div class="stack">
+  <div class="card">
+    <div class="section-header">
+      <div>
+        <div class="label">Connection Health</div>
+        <div class="sub">adibudget backend status and Firefly III connectivity.</div>
+      </div>
+
+      <button type="button" class="btn btn-secondary" data-open-modal="health-check">
+        Refresh Health
+      </button>
+    </div>
+  </div>
+
+  <div id="settingsHealthCards" class="grid-3"></div>
+  <div class="card">
+    <div class="label">Backend Configuration</div>
+    <div class="sub">Safe runtime details only. Secrets are never exposed here.</div>
+    <div id="settingsBackendConfig" class="row-meta" style="margin-top:16px;"></div>
+  </div>
+  <div class="card">
+    <div class="label">How it works</div>
+    <div class="sub">
+      The frontend calls this Express backend with relative paths. The backend keeps
+      your Firefly token private and adapts Firefly III responses into UI-friendly data.
+    </div>
+  </div>
+</div>

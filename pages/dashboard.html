@@ -1,98 +1,87 @@
 <div class="stack">
+  <div class="grid-4" id="dashboardMetrics"></div>
 
-  <!-- Stability Score -->
-  <div class="card stability-card">
-
-    <div class="label">Financial Stability Score</div>
-
-    <div id="stabilityScore"
-         class="stability-score counter"
-         data-value="0">
-         0%
-    </div>
-
-    <div class="stability-bar">
-      <div class="stability-fill" id="stabilityFill"></div>
-    </div>
-
-    <div class="stability-label">
-      Based on burn ratio & control metrics
-    </div>
-
-  </div>
-
-
-  <!-- KPI GRID -->
-  <div class="grid-3">
-
-    <div class="card lift-hover">
-      <div class="label">Net Worth</div>
-      <div id="netWorth" class="value counter" data-value="0">
-        ₹ 0
-      </div>
-      <div class="sub positive">Auto calculated</div>
-    </div>
-
-    <div class="card lift-hover">
-      <div class="label">Liquid Cash</div>
-      <div id="liquidCash" class="value counter" data-value="0">
-        ₹ 0
-      </div>
-      <div class="sub">Savings + Bank</div>
-    </div>
-
-    <div class="card lift-hover">
-      <div class="label">Emergency Runway</div>
-      <div id="runway" class="value counter" data-value="0">
-        0
-      </div>
-      <div class="sub">Months of survival</div>
-    </div>
-
-  </div>
-
-
-  <!-- CONTROL METRICS -->
-  <div class="grid-3">
-
-    <div class="card lift-hover">
-      <div class="label">Burn Ratio</div>
-      <div id="burnRatio" class="value counter" data-value="0">
-        0%
-      </div>
-      <div class="sub warning">Spending vs income</div>
-    </div>
-
-    <div class="card lift-hover">
-      <div class="label">Credit Utilization</div>
-      <div class="value">--</div>
-      <div class="sub">Future module</div>
-    </div>
-
-    <div class="card lift-hover">
-      <div class="label">EMI Load</div>
-      <div class="value">--</div>
-      <div class="sub">Future module</div>
-    </div>
-
-  </div>
-
-
-  <!-- GROWTH SECTION -->
   <div class="grid-2">
-
-    <div class="card lift-hover">
-      <div class="label">Savings Rate</div>
-      <div class="value">--</div>
-      <div class="sub">Future module</div>
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="label">Recent Transactions</div>
+          <div class="sub">Latest movement across your Firefly-ledger accounts.</div>
+        </div>
+        <button type="button" class="btn btn-secondary" data-open-page="transactions">
+          View All
+        </button>
+      </div>
+      <div id="dashboardRecentTransactions"></div>
     </div>
 
-    <div class="card lift-hover">
-      <div class="label">Surplus Available</div>
-      <div class="value">--</div>
-      <div class="sub">After EMI + Fixed</div>
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="label">Budget Snapshot</div>
+          <div class="sub">Monthly targets and current usage.</div>
+        </div>
+        <button type="button" class="btn btn-secondary" data-open-page="budgets">
+          Manage Budgets
+        </button>
+      </div>
+      <div id="dashboardBudgetSnapshot"></div>
     </div>
-
   </div>
 
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="label">Budget Projection</div>
+          <div class="sub">Projected month-end spend and safe daily pace.</div>
+        </div>
+        <button type="button" class="btn btn-secondary" data-open-page="review">
+          Monthly Review
+        </button>
+      </div>
+      <div id="dashboardBudgetProjection"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="label">Fast Entry Memory</div>
+          <div class="sub">Recent searches, merchants, and defaults from AdiBudget.</div>
+        </div>
+        <button type="button" class="btn btn-secondary" data-open-modal="quick-add">
+          Open Quick Add
+        </button>
+      </div>
+      <div id="dashboardQuickMemory"></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="label">Accounts Overview</div>
+          <div class="sub">Balances split by account style.</div>
+        </div>
+        <button type="button" class="btn btn-secondary" data-open-page="accounts">
+          Open Accounts
+        </button>
+      </div>
+      <div id="dashboardAccountsOverview"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-header">
+        <div>
+          <div class="label">System Status</div>
+          <div class="sub">Backend and Firefly III connection health.</div>
+        </div>
+        <button type="button" class="btn btn-secondary" data-open-page="settings">
+          Settings
+        </button>
+      </div>
+      <div id="dashboardHealthOverview"></div>
+    </div>
+  </div>
 </div>

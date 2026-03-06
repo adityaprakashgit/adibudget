@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Personal CFO</title>
+  <title>adibudget</title>
 
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/layout.css" />
@@ -12,71 +12,99 @@
 </head>
 
 <body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div>
+        <div class="brand">adibudget</div>
+        <div class="sub nav-subtitle">Custom UI on top of Firefly III</div>
 
-<div class="app-shell">
+        <nav class="nav-stack">
+          <div class="nav-item active" data-page="dashboard">Dashboard</div>
+          <div class="nav-item" data-page="transactions">Transactions</div>
+          <div class="nav-item" data-page="review">Review</div>
+          <div class="nav-item" data-page="accounts">Accounts</div>
+          <div class="nav-item" data-page="budgets">Budgets</div>
+          <div class="nav-item" data-page="categories">Categories</div>
+          <div class="nav-item" data-page="tags">Tags</div>
+          <div class="nav-item" data-page="recurring">Recurring</div>
+          <div class="nav-item" data-page="settings">Settings</div>
+        </nav>
+      </div>
 
-  <aside class="sidebar">
-    <div>
-      <div class="brand">Personal CFO</div>
+      <div class="nav-footer-card">
+        <div class="label">Connection</div>
+        <div id="navHealthStatus" class="status-pill status-idle">Checking</div>
+        <div class="sub">Tokens stay on the backend.</div>
+      </div>
+    </aside>
 
-      <nav>
-        <div class="nav-item active" data-page="dashboard">Dashboard</div>
-        <div class="nav-item" data-page="transactions">Transactions</div>
-        <div class="nav-item" data-page="accounts">Accounts</div>
-        <div class="nav-item" data-page="budgets">Budgets</div>
-      </nav>
+    <div class="main-area">
+      <header class="topbar">
+        <div>
+          <div id="pageTitle" class="page-title">Dashboard</div>
+          <div id="pageSubtitle" class="sub">Day-to-day finance management from one UI.</div>
+        </div>
+
+        <div class="topbar-actions">
+          <form id="globalSearchForm" class="global-search">
+            <input
+              id="globalSearchInput"
+              class="input global-search-input"
+              type="search"
+              placeholder="Search merchants, tags, months"
+              autocomplete="off"
+            />
+          </form>
+          <button type="button" class="btn btn-primary" data-open-modal="quick-add">
+            Quick Add
+          </button>
+          <button type="button" class="btn btn-secondary" data-open-page="search">
+            Search
+          </button>
+          <button type="button" class="btn btn-secondary" data-open-modal="health-check">
+            Check Connection
+          </button>
+          <button type="button" class="btn btn-primary" data-open-modal="transaction-create">
+            New Entry
+          </button>
+        </div>
+      </header>
+
+      <main id="content" class="page-container"></main>
     </div>
-  </aside>
-
-  <div class="main-area">
-    <header class="topbar">
-      <div id="pageTitle" class="page-title">Dashboard</div>
-    </header>
-
-    <main id="content" class="page-container"></main>
   </div>
-</div>
 
-<button type="button" class="fab" id="fabBtn">+</button>
+  <button type="button" class="fab" id="fabBtn">+</button>
 
-<div class="modal-overlay hidden" id="globalModal">
-  <div class="modal-card">
-    <div class="modal-header">
-      <div>Add Transaction</div>
-      <div id="closeModal">✕</div>
+  <div class="modal-overlay hidden" id="globalModal">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <div>
+          <div id="modalTitle" class="modal-title">Create</div>
+          <div id="modalSubtitle" class="sub">Manage your finance data without leaving adibudget.</div>
+        </div>
+        <button type="button" id="closeModal" class="modal-close-btn" aria-label="Close">
+          ✕
+        </button>
+      </div>
+
+      <div id="modalError" class="alert alert-error hidden"></div>
+      <div id="modalBody" class="stack"></div>
+
+      <div class="modal-actions">
+        <button type="button" id="modalSecondaryAction" class="btn btn-secondary">
+          Cancel
+        </button>
+        <button type="button" id="modalPrimaryAction" class="btn btn-primary">
+          Save
+        </button>
+      </div>
     </div>
-
-   <div class="stack">
-
-  <select id="transactionType" class="input">
-    <option value="expense">Expense</option>
-    <option value="income">Income</option>
-  </select>
-
-  <input id="amountInput" type="number" class="input" placeholder="Amount" />
-
-  <select id="categoryInput" class="input">
-    <option value="food">Food</option>
-    <option value="travel">Travel</option>
-    <option value="salary">Salary</option>
-  </select>
-
-  <!-- 🔥 Account dropdown must be separate -->
-  <select id="accountSelect" class="input"></select>
-
-  <button type="button" id="saveTransactionBtn" class="btn btn-primary">
-    Save
-  </button>
-
-</div>
-
   </div>
-</div>
 
-<!-- IMPORTANT: Order matters -->
-<script src="js/app.js" defer></script>
-<script src="js/router.js" defer></script>
-<script src="js/ui.js" defer></script>
-
+  <script src="js/app.js" defer></script>
+  <script src="js/v2.js" defer></script>
+  <script src="js/router.js" defer></script>
+  <script src="js/ui.js" defer></script>
 </body>
 </html>

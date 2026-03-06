@@ -2,11 +2,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("globalModal");
   const fab = document.getElementById("fabBtn");
   const closeModal = document.getElementById("closeModal");
-  const saveBtn = document.getElementById("saveTransactionBtn");
+  const modalSecondaryAction = document.getElementById("modalSecondaryAction");
+  const modalPrimaryAction = document.getElementById("modalPrimaryAction");
 
-  async function openModal() {
+  async function openModal(action, id = "") {
     try {
-      await loadAccounts();
+      await window.adibudgetApp.openModal(action, id);
       modal.classList.remove("hidden");
     } catch (error) {
       window.alert(error.message);
@@ -14,64 +15,100 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function closeModalFn() {
-    modal.classList.add("hidden");
+    window.adibudgetApp.closeModal();
   }
 
-  if (fab) fab.addEventListener("click", openModal);
-
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-open-modal]");
-    if (btn) openModal();
-  });
-
-  if (closeModal) closeModal.addEventListener("click", closeModalFn);
-
-  if (modal) {
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) closeModalFn();
+  if (fab) {
+    fab.addEventListener("click", () => {
+      openModal("quick-add");
     });
   }
 
-  document.addEventListener("submit", (e) => {
-    e.preventDefault();
-  });
+  if (closeModal) {
+    closeModal.addEventListener("click", closeModalFn);
+  }
 
-  if (saveBtn) {
-    saveBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+  if (modalSecondaryAction) {
+    modalSecondaryAction.addEventListener("click", closeModalFn);
+  }
 
-      const type = document.getElementById("transactionType").value;
-      const amount = document.getElementById("amountInput").value;
-      const category = document.getElementById("categoryInput").value;
-      const account_id = document.getElementById("accountSelect").value;
+  if (modalPrimaryAction) {
+    modalPrimaryAction.addEventListener("click", async () => {
+      await window.adibudgetApp.submitModal();
+    });
+  }
 
-      if (!amount || amount <= 0 || !account_id) {
-        return;
-      }
-
-      try {
-        await addTransaction(type, amount, category, account_id);
-        await loadTransactionsFromDB();
-        await loadAccounts();
-
-        if (window.currentPage === "dashboard") {
-          renderDashboardData();
-        }
-
-        if (window.currentPage === "transactions") {
-          renderTransactionsTable();
-        }
-
-        if (window.currentPage === "accounts") {
-          renderAccountsPage();
-        }
-
-        document.getElementById("amountInput").value = "";
+  if (modal) {
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
         closeModalFn();
+      }
+    });
+  }
+
+  document.addEventListener("click", async (event) => {
+    const openModalBtn = event.target.closest("[data-open-modal]");
+    if (openModalBtn) {
+      await openModal(openModalBtn.dataset.openModal, openModalBtn.dataset.id || "");
+      return;
+    }
+
+    const actionBtn = event.target.closest("[data-action]");
+    if (actionBtn) {
+      try {
+        await window.adibudgetApp.handleAction(
+          actionBtn.dataset.action,
+          actionBtn.dataset.id || ""
+        );
       } catch (error) {
         window.alert(error.message);
       }
-    });
-  }
+      return;
+    }
+
+    const openPageBtn = event.target.closest("[data-open-page]");
+    if (openPageBtn) {
+      window.location.hash = openPageBtn.dataset.openPage;
+      return;
+    }
+
+    if (event.target.id === "addSplitBtn") {
+      window.adibudgetApp.addSplitRow();
+      return;
+    }
+
+    const removeSplitBtn = event.target.closest("[data-remove-split]");
+    if (removeSplitBtn) {
+      const row = removeSplitBtn.closest("[data-split-row]");
+      const container = document.getElementById("transactionSplitList");
+      if (row && container && container.children.length > 1) {
+        row.remove();
+      }
+      return;
+    }
+
+    if (event.target.id === "clearTransactionFiltersBtn") {
+      window.adibudgetApp.clearTransactionFilters();
+      window.adibudgetApp.renderTransactionFilters();
+      window.adibudgetApp.renderTransactionsTable();
+    }
+  });
+
+  document.addEventListener("change", (event) => {
+    const filterTarget = event.target.closest("[data-filter]");
+    if (filterTarget) {
+      window.adibudgetApp.setTransactionFilter(
+        filterTarget.dataset.filter,
+        filterTarget.value
+      );
+      return;
+    }
+
+    if (
+      event.target.matches("[data-transaction-type]") ||
+      event.target.matches("[data-recurring-type]")
+    ) {
+      window.adibudgetApp.syncModalFieldVisibility();
+    }
+  });
 });

@@ -1,9 +1,17 @@
 <div class="stack">
-
   <div class="card">
-    <div class="label">All Accounts</div>
+    <div class="section-header">
+      <div>
+        <div class="label">Accounts</div>
+        <div class="sub">Asset, cash, savings, credit, and liability accounts from Firefly III.</div>
+      </div>
+
+      <button type="button" class="btn btn-primary" data-open-modal="account-create">
+        Add Account
+      </button>
+    </div>
   </div>
 
-  <div id="accountsGrid" class="grid-3"></div>
-
+  <div id="accountsSummary" class="grid-4"></div>
+  <div id="accountsGroups" class="stack"></div>
 </div>
