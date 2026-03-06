@@ -22,6 +22,8 @@
       <nav>
         <div class="nav-item active" data-page="dashboard">Dashboard</div>
         <div class="nav-item" data-page="transactions">Transactions</div>
+        <div class="nav-item" data-page="accounts">Accounts</div>
+        <div class="nav-item" data-page="budgets">Budgets</div>
       </nav>
     </div>
   </aside>
@@ -44,24 +46,30 @@
       <div id="closeModal">✕</div>
     </div>
 
-    <div class="stack">
-      <select id="transactionType" class="input">
-        <option value="expense">Expense</option>
-        <option value="income">Income</option>
-      </select>
+   <div class="stack">
 
-      <input id="amountInput" type="number" class="input" placeholder="Amount" />
+  <select id="transactionType" class="input">
+    <option value="expense">Expense</option>
+    <option value="income">Income</option>
+  </select>
 
-      <select id="categoryInput" class="input">
-        <option value="food">Food</option>
-        <option value="travel">Travel</option>
-        <option value="salary">Salary</option>
-      </select>
+  <input id="amountInput" type="number" class="input" placeholder="Amount" />
 
-      <button id="saveTransactionBtn" class="btn btn-primary">
-        Save
-      </button>
-    </div>
+  <select id="categoryInput" class="input">
+    <option value="food">Food</option>
+    <option value="travel">Travel</option>
+    <option value="salary">Salary</option>
+  </select>
+
+  <!-- 🔥 Account dropdown must be separate -->
+  <select id="accountSelect" class="input"></select>
+
+  <button type="button" id="saveTransactionBtn" class="btn btn-primary">
+    Save
+  </button>
+
+</div>
+
   </div>
 </div>
 

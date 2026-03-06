@@ -1,5 +1,5 @@
 // ============================
-// ROUTER
+// ROUTER (FULL + ACCOUNTS)
 // ============================
 
 const content = document.getElementById("content");
@@ -31,14 +31,26 @@ async function loadPage(page) {
 
   if (page === "dashboard") renderDashboardData();
   if (page === "transactions") renderTransactionsTable();
+  if (page === "accounts") renderAccountsPage();
 }
 
 navItems.forEach(item => {
   item.addEventListener("click", () => {
-    loadPage(item.dataset.page);
+    const page = item.dataset.page;
+    window.location.hash = page;
   });
 });
 
+window.addEventListener("hashchange", () => {
+  const page = window.location.hash.replace("#", "");
+  if (page) loadPage(page);
+});
+
 document.addEventListener("DOMContentLoaded", () => {
-  loadPage("dashboard");
+  const pageFromHash = window.location.hash.replace("#", "");
+  if (pageFromHash) {
+    loadPage(pageFromHash);
+  } else {
+    loadPage("dashboard");
+  }
 });

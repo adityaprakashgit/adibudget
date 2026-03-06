@@ -9,10 +9,6 @@ const cors = require("cors");
 const app = express();
 const PORT = 3000;
 
-// ===============================
-// MIDDLEWARE
-// ===============================
-
 app.use(cors());
 app.use(express.json());
 
@@ -34,7 +30,6 @@ const db = new sqlite3.Database("./database.db", (err) => {
 
 db.serialize(() => {
 
-  // ACCOUNTS TABLE
   db.run(`
     CREATE TABLE IF NOT EXISTS accounts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,7 +40,6 @@ db.serialize(() => {
     )
   `);
 
-  // TRANSACTIONS TABLE
   db.run(`
     CREATE TABLE IF NOT EXISTS transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,13 +59,12 @@ db.serialize(() => {
 // ROUTES
 // ===============================
 
-// ROOT CHECK
 app.get("/", (req, res) => {
   res.json({ message: "Personal CFO API running" });
 });
 
 // ===============================
-// GET ALL TRANSACTIONS
+// GET TRANSACTIONS
 // ===============================
 
 app.get("/transactions", (req, res) => {
@@ -80,10 +73,12 @@ app.get("/transactions", (req, res) => {
     `SELECT * FROM transactions ORDER BY date DESC`,
     [],
     (err, rows) => {
+
       if (err) {
         console.error(err);
         return res.status(500).json({ error: "Failed to fetch transactions" });
       }
+
       res.json(rows);
     }
   );
@@ -91,43 +86,101 @@ app.get("/transactions", (req, res) => {
 });
 
 // ===============================
-// ADD TRANSACTION
+// GET ACCOUNTS
+// ===============================
+
+app.get("/accounts", (req, res) => {
+
+  db.all(
+    `SELECT * FROM accounts`,
+    [],
+    (err, rows) => {
+
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Failed to fetch accounts" });
+      }
+
+      res.json(rows);
+    }
+  );
+
+});
+
+// ===============================
+// ADD TRANSACTION (SMART LOGIC)
 // ===============================
 
 app.post("/transactions", (req, res) => {
 
-  let { type, amount, category } = req.body;
+  let { type, amount, category, account_id } = req.body;
 
-  if (!type || !amount) {
+  if (!type || !amount || !account_id) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  // 🔥 normalize to lowercase
   type = type.toLowerCase();
-
-  const allowedTypes = ["income", "expense", "transfer"];
-
-  if (!allowedTypes.includes(type)) {
-    return res.status(400).json({ error: "Invalid transaction type" });
-  }
+  amount = Number(amount);
 
   const date = new Date().toISOString();
 
   db.run(
-    `INSERT INTO transactions (type, amount, category, date)
-     VALUES (?, ?, ?, ?)`,
-    [type, amount, category || null, date],
+    `INSERT INTO transactions (type, amount, category, account_id, date)
+     VALUES (?, ?, ?, ?, ?)`,
+    [type, amount, category || null, account_id, date],
     function (err) {
 
       if (err) {
-        console.error(err);
+        console.error("Insert error:", err);
         return res.status(500).json({ error: "Insert failed" });
       }
 
-      res.json({
-        success: true,
-        id: this.lastID
-      });
+      const insertedId = this.lastID;
+
+      db.get(
+        `SELECT * FROM accounts WHERE id = ?`,
+        [account_id],
+        (err2, account) => {
+
+          if (err2 || !account) {
+            return res.status(404).json({ error: "Account not found" });
+          }
+
+          let balanceChange = 0;
+
+          // BANK LOGIC
+          if (account.type === "bank") {
+            if (type === "income") balanceChange = amount;
+            if (type === "expense") balanceChange = -amount;
+          }
+
+          // CREDIT CARD LOGIC
+          if (account.type === "credit") {
+            if (type === "expense") balanceChange = amount; // liability increases
+            if (type === "income") {
+              return res.status(400).json({
+                error: "Income not allowed on credit card"
+              });
+            }
+          }
+
+          db.run(
+            `UPDATE accounts SET balance = balance + ? WHERE id = ?`,
+            [balanceChange, account_id],
+            function (err3) {
+
+              if (err3) {
+                console.error("Balance update error:", err3);
+                return res.status(500).json({ error: "Balance update failed" });
+              }
+
+              res.json({ success: true, id: insertedId });
+
+            }
+          );
+
+        }
+      );
 
     }
   );
@@ -135,24 +188,75 @@ app.post("/transactions", (req, res) => {
 });
 
 // ===============================
-// DELETE TRANSACTION
+// DELETE TRANSACTION (SMART REVERSE)
 // ===============================
 
 app.delete("/transactions/:id", (req, res) => {
 
   const { id } = req.params;
 
-  db.run(
-    `DELETE FROM transactions WHERE id = ?`,
+  db.get(
+    `SELECT * FROM transactions WHERE id = ?`,
     [id],
-    function (err) {
+    (err, transaction) => {
 
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: "Delete failed" });
+      if (err || !transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
       }
 
-      res.json({ success: true });
+      const { type, amount, account_id } = transaction;
+
+      db.get(
+        `SELECT * FROM accounts WHERE id = ?`,
+        [account_id],
+        (err2, account) => {
+
+          if (err2 || !account) {
+            return res.status(404).json({ error: "Account not found" });
+          }
+
+          let reverseChange = 0;
+
+          // BANK LOGIC
+          if (account.type === "bank") {
+            if (type === "income") reverseChange = -amount;
+            if (type === "expense") reverseChange = amount;
+          }
+
+          // CREDIT CARD LOGIC
+          if (account.type === "credit") {
+            if (type === "expense") reverseChange = -amount;
+          }
+
+          db.run(
+            `UPDATE accounts SET balance = balance + ? WHERE id = ?`,
+            [reverseChange, account_id],
+            function (err3) {
+
+              if (err3) {
+                console.error("Balance revert error:", err3);
+                return res.status(500).json({ error: "Balance revert failed" });
+              }
+
+              db.run(
+                `DELETE FROM transactions WHERE id = ?`,
+                [id],
+                function (err4) {
+
+                  if (err4) {
+                    return res.status(500).json({ error: "Delete failed" });
+                  }
+
+                  res.json({ success: true });
+
+                }
+              );
+
+            }
+          );
+
+        }
+      );
 
     }
   );

@@ -1,3 +1,7 @@
+// ======================================
+// PERSONAL CFO - UI CONTROLLER (REAL)
+// ======================================
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const modal = document.getElementById("globalModal");
@@ -7,32 +11,76 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openModal() {
     modal.classList.remove("hidden");
+    loadAccounts(); // 🔥 load accounts into dropdown when opening
   }
 
   function closeModalFn() {
     modal.classList.add("hidden");
   }
 
-  fab.addEventListener("click", openModal);
-  closeModal.addEventListener("click", closeModalFn);
+  // FAB
+  if (fab) fab.addEventListener("click", openModal);
 
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) closeModalFn();
+  // Dynamic Add button
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest("[data-open-modal]");
+    if (btn) openModal();
   });
 
-  saveBtn.addEventListener("click", async () => {
+  // Close modal
+  if (closeModal) closeModal.addEventListener("click", closeModalFn);
 
-    const type = document.getElementById("transactionType").value;
-    const amount = document.getElementById("amountInput").value;
-    const category = document.getElementById("categoryInput").value;
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModalFn();
+    });
+  }
 
-    if (!amount) return;
-
-    await addTransaction(type, amount, category);
-
-    closeModalFn();
-    document.getElementById("amountInput").value = "";
-
-    loadPage(window.currentPage);
+  // Prevent form submit
+  document.addEventListener("submit", function (e) {
+    e.preventDefault();
   });
+
+  // ======================================
+  // SAVE TRANSACTION (WITH ACCOUNT)
+  // ======================================
+
+  if (saveBtn) {
+
+    saveBtn.addEventListener("click", async (e) => {
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const type = document.getElementById("transactionType").value;
+      const amount = document.getElementById("amountInput").value;
+      const category = document.getElementById("categoryInput").value;
+      const account_id = document.getElementById("accountSelect").value;
+
+      if (!amount || amount <= 0 || !account_id) return;
+
+      await addTransaction(type, amount, category, account_id);
+
+      await loadTransactionsFromDB();
+      await loadAccounts();
+
+      if (window.currentPage === "dashboard") {
+        renderDashboardData();
+      }
+
+      if (window.currentPage === "transactions") {
+        renderTransactionsTable();
+      }
+
+      if (window.currentPage === "accounts") {
+        renderAccountsPage();
+      }
+
+      document.getElementById("amountInput").value = "";
+      closeModalFn();
+
+    });
+
+  }
+
 });
